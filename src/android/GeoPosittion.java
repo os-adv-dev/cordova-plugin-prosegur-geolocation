@@ -1,4 +1,4 @@
-package cordova.plugin.prosegur.battery;
+package cordova.plugin.prosegur.geolocation;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.security.acl.AclEntry;

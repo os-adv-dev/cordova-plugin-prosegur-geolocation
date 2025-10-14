@@ -25,7 +25,6 @@
             <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-			
 			<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 			<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 			<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
@@ -34,27 +33,22 @@
 
         </config-file>
 
-
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
 			<!--<application tools:replace="android:appComponentFactory" android:appComponentFactory="androidx.core.app.CoreComponentFactory" />-->
-            <service android:name="cordova.plugin.prosegur.battery.BatteryListenerService" android:stopWithTask="false"/>
-			<service android:name="cordova.plugin.prosegur.battery.GeoListenerService" android:foregroundServiceType="location" />
+            <service android:name="cordova.plugin.prosegur.geolocation.BatteryListenerService" android:stopWithTask="false"/>
+			<service android:name="cordova.plugin.prosegur.geolocation.GeoListenerService" android:foregroundServiceType="location" />
 	    </config-file>
 		
-        <source-file src="src/android/BatteryProsegur.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/APIService.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/ApiUtils.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/BatteryLevel.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/GeoPosittion.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/GeoListenerService.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/BatteryListenerService.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/Post.java" target-dir="src/cordova/plugin/prosegur/battery" />
-		<source-file src="src/android/RetrofitClient.java" target-dir="src/cordova/plugin/prosegur/battery" />
-
-		
-        <framework custom="true" src="src/android/prosegurbattery.gradle" target_dir="/*" type="gradleReference" />
-
-		
+        <source-file src="src/android/GeolocationProsegur.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/APIService.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/ApiUtils.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/BatteryLevel.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/GeoPosittion.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/GeoListenerService.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/BatteryListenerService.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/Post.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/RetrofitClient.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+        <framework custom="true" src="src/android/prosegurgeolocation.gradle" target_dir="/*" type="gradleReference" />		
     </platform>
 
 </plugin>

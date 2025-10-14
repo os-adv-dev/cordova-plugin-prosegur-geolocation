@@ -1,4 +1,4 @@
-package cordova.plugin.prosegur.battery;
+package cordova.plugin.prosegur.geolocation;
 
 import android.Manifest;
 import android.content.ComponentName;

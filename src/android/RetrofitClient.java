@@ -1,4 +1,4 @@
-package cordova.plugin.prosegur.battery;
+package cordova.plugin.prosegur.geolocation;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;

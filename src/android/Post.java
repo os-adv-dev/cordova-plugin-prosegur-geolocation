@@ -1,4 +1,4 @@
-package cordova.plugin.prosegur.battery;
+package cordova.plugin.prosegur.geolocation;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

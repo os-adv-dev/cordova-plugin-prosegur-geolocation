@@ -1,8 +1,8 @@
-package cordova.plugin.prosegur.battery;
+package cordova.plugin.prosegur.geolocation;
 
 import java.util.ArrayList;
 
-import cordova.plugin.prosegur.battery.Post;
+import cordova.plugin.prosegur.geolocation.Post;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;

@@ -1,4 +1,4 @@
-package cordova.plugin.prosegur.battery;
+package cordova.plugin.prosegur.geolocation;
 
 public class BatteryLevel {
 

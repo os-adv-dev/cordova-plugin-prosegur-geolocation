@@ -17,7 +17,7 @@
        under the License.
  */
 
-package cordova.plugin.prosegur.battery;
+package cordova.plugin.prosegur.geolocation;
 
 import android.os.Bundle;
 import org.apache.cordova.*;
