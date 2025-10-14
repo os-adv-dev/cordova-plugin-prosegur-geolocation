@@ -1,0 +1,19 @@
+{
+  "name": "cordova-plugin-prosegur-geolocation",
+  "version": "0.0.1",
+  "description": "Plugin para la lectura de geolocalizaion",
+  "cordova": {
+    "id": "cordova-plugin-prosegur-geolocation",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "author": "Sergio.Rios",
+  "license": "ISC"
+}
