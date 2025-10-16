@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 
+@available(iOS 14.0, *)
 @objc(GeolocationProsegur)
 class GeolocationProsegur: CDVPlugin {
 
@@ -158,6 +159,7 @@ class GeolocationProsegur: CDVPlugin {
 }
 
 // MARK: - LocationServiceDelegate
+@available(iOS 14.0, *)
 extension GeolocationProsegur: LocationServiceDelegate {
 
     func locationService(_ service: LocationService, didUpdateLocation location: CLLocation) {

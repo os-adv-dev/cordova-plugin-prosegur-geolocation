@@ -1,11 +1,13 @@
 import Foundation
 import CoreLocation
 
+@available(iOS 14.0, *)
 protocol LocationServiceDelegate: AnyObject {
     func locationService(_ service: LocationService, didUpdateLocation location: CLLocation)
     func locationService(_ service: LocationService, didFailWithError error: Error)
 }
 
+@available(iOS 14.0, *)
 class LocationService: NSObject {
 
     // MARK: - Properties
@@ -13,6 +15,7 @@ class LocationService: NSObject {
     private var timer: Timer?
     private var apiClient: APIClient?
     private var positionsBuffer: [GeoPosition] = []
+    private var latestLocation: CLLocation?
 
     // Configuration
     private var token: String?
@@ -129,7 +132,7 @@ class LocationService: NSObject {
         stopTimer()
 
         timer = Timer.scheduledTimer(withTimeInterval: updateInterval, repeats: true) { [weak self] _ in
-            self?.sendBufferedLocations()
+            self?.testGeo()  // Matches Android behavior - call testGeo on timer tick
         }
 
         // Ensure timer runs in background
@@ -165,8 +168,27 @@ class LocationService: NSObject {
         )
 
         positionsBuffer.append(position)
-        NSLog("[LocationService] Location saved to buffer. Buffer size: \(positionsBuffer.count)")
+        NSLog("[LocationService] NEW geoposition added, coords: \(positionsBuffer.count)")
         NSLog("[LocationService] Lat: \(location.coordinate.latitude), Lon: \(location.coordinate.longitude)")
+
+        // Immediately send buffer (matching Android behavior at line 302)
+        sendBufferedLocations()
+    }
+
+    // Matches Android's testGeo() method
+    private func testGeo() {
+        NSLog("[LocationService] GeoTimer called")
+        NSLog("[LocationService] Buffer size before adding: \(positionsBuffer.count)")
+
+        guard let location = latestLocation else {
+            NSLog("[LocationService] No location available")
+            return
+        }
+
+        // Save current location to buffer and send immediately (Android behavior)
+        saveGeoLocation(location)
+
+        NSLog("[LocationService] GeoTimer finish")
     }
 
     private func sendBufferedLocations() {
@@ -191,22 +213,26 @@ class LocationService: NSObject {
             case .success(let message):
                 NSLog("[LocationService] API Success: \(message)")
                 self?.positionsBuffer.removeAll()
+                NSLog("[LocationService] Buffer cleared. Current size: 0")
             case .failure(let error):
                 NSLog("[LocationService] API Error: \(error.localizedDescription)")
                 // Keep positions in buffer for retry on next timer tick
+                NSLog("[LocationService] Buffer kept for retry. Current size: \(self?.positionsBuffer.count ?? 0)")
             }
         }
     }
 }
 
 // MARK: - CLLocationManagerDelegate
+@available(iOS 14.0, *)
 extension LocationService: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
 
+        // Store latest location (matching Android behavior - don't save to buffer yet)
+        latestLocation = location
         NSLog("[LocationService] Location updated: \(location.coordinate.latitude), \(location.coordinate.longitude)")
-        saveGeoLocation(location)
         delegate?.locationService(self, didUpdateLocation: location)
     }
 
@@ -221,7 +247,8 @@ extension LocationService: CLLocationManagerDelegate {
 
         switch status {
         case .authorizedAlways, .authorizedWhenInUse:
-            startLocationUpdates()
+            //startLocationUpdates()
+            NSLog("[LocationService] Location permission granted")
         case .denied, .restricted:
             NSLog("[LocationService] Location access denied")
         case .notDetermined:
