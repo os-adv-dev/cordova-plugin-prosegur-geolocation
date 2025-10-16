@@ -47,7 +47,48 @@
 		<source-file src="src/android/GeoListenerService.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
 		<source-file src="src/android/Post.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
 		<source-file src="src/android/RetrofitClient.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
-        <framework custom="true" src="src/android/prosegurgeolocation.gradle" target_dir="/*" type="gradleReference" />		
+        <framework custom="true" src="src/android/prosegurgeolocation.gradle" target_dir="/*" type="gradleReference" />
+    </platform>
+
+    <platform name="ios">
+
+        <!-- Hooks -->
+        <hook type="before_plugin_install" src="hooks/install_prerequisites.js" />
+        <hook type="after_plugin_add" src="hooks/add_swift_support.js" />
+
+        <config-file parent="/*" target="config.xml">
+            <feature name="GeolocationProsegur">
+                <param name="ios-package" value="GeolocationProsegur" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+
+        <config-file parent="NSLocationAlwaysAndWhenInUseUsageDescription" target="*-Info.plist">
+            <string>This app requires location access to track your position and send it to the server.</string>
+        </config-file>
+
+        <config-file parent="NSLocationWhenInUseUsageDescription" target="*-Info.plist">
+            <string>This app requires location access to track your position and send it to the server.</string>
+        </config-file>
+
+        <config-file parent="NSLocationAlwaysUsageDescription" target="*-Info.plist">
+            <string>This app requires continuous location access to track your position in the background.</string>
+        </config-file>
+
+        <config-file parent="UIBackgroundModes" target="*-Info.plist">
+            <array>
+                <string>location</string>
+            </array>
+        </config-file>
+
+        <source-file src="src/ios/GeolocationProsegur.swift" />
+        <source-file src="src/ios/LocationService.swift" />
+        <source-file src="src/ios/APIClient.swift" />
+        <source-file src="src/ios/GeoPosition.swift" />
+
+        <framework src="CoreLocation.framework" />
+        <framework src="Foundation.framework" />
+
     </platform>
 
 </plugin>
