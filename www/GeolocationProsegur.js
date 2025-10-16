@@ -6,7 +6,7 @@ exports.stop = function (success, error) {
     exec(success, error, 'GeolocationProsegur', 'stop');
 };
 
-exports.initGeo = function (token, dir, country, format, imei, time, center, user, provenance, geoLocationTypeId, success, error) {
+exports.initGeo = function (token, dir, country, imei, time, center, user, provenance, geoLocationTypeId, success, error) {
     exec(success, error, 'GeolocationProsegur', 'initGeo', [token, dir, country, imei, time, center, user, provenance, geoLocationTypeId]);
 };
 
