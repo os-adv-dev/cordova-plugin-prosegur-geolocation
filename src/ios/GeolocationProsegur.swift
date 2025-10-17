@@ -17,18 +17,23 @@ class GeolocationProsegur: CDVPlugin {
     @objc(initGeo:)
     func initGeo(command: CDVInvokedUrlCommand) {
         NSLog("[GeolocationProsegur] initGeo called")
+        NSLog("[GeolocationProsegur] Arguments count: \(command.arguments.count)")
+        NSLog("[GeolocationProsegur] locationService is nil? \(locationService == nil)")
 
         guard command.arguments.count >= 9 else {
+            NSLog("[GeolocationProsegur] ❌ FAILED: Not enough arguments (need 9, got \(command.arguments.count))")
             let result = CDVPluginResult(
                 status: CDVCommandStatus_ERROR,
-                messageAs: "Missing required parameters"
+                messageAs: "Missing required parameters - need 9, got \(command.arguments.count)"
             )
             self.commandDelegate?.send(result, callbackId: command.callbackId)
             return
         }
 
+        NSLog("[GeolocationProsegur] ✅ Argument count OK, parsing parameters...")
+
         guard let token = command.arguments[0] as? String,
-              let baseURL = command.arguments[1] as? String,
+              let url = command.arguments[1] as? String,
               let country = command.arguments[2] as? String,
               let imei = command.arguments[3] as? String,
               let updateInterval = command.arguments[4] as? Int,
@@ -36,6 +41,8 @@ class GeolocationProsegur: CDVPlugin {
               let userId = command.arguments[6] as? String,
               let provenanceId = command.arguments[7] as? Int,
               let geoLocationTypeId = command.arguments[8] as? Int else {
+            NSLog("[GeolocationProsegur] ❌ FAILED: Parameter type casting failed")
+            NSLog("[GeolocationProsegur] Args: \(command.arguments)")
             let result = CDVPluginResult(
                 status: CDVCommandStatus_ERROR,
                 messageAs: "Invalid parameter types"
@@ -44,9 +51,12 @@ class GeolocationProsegur: CDVPlugin {
             return
         }
 
+        NSLog("[GeolocationProsegur] ✅ Parameters parsed successfully")
+        NSLog("[GeolocationProsegur] Configuring locationService...")
+
         locationService?.configure(
             token: token,
-            baseURL: baseURL,
+            url: url,
             country: country,
             imei: imei,
             updateInterval: updateInterval,
@@ -56,7 +66,9 @@ class GeolocationProsegur: CDVPlugin {
             geoLocationTypeId: geoLocationTypeId
         )
 
+        NSLog("[GeolocationProsegur] ✅ Configuration complete, starting tracking...")
         locationService?.startTracking()
+        NSLog("[GeolocationProsegur] ✅ startTracking() called")
 
         let result = CDVPluginResult(
             status: CDVCommandStatus_OK,
@@ -64,7 +76,7 @@ class GeolocationProsegur: CDVPlugin {
         )
         self.commandDelegate?.send(result, callbackId: command.callbackId)
 
-        NSLog("[GeolocationProsegur] Configuration: token=\(token), url=\(baseURL), country=\(country), imei=\(imei), interval=\(updateInterval)s")
+        NSLog("[GeolocationProsegur] Configuration: token=\(token), url=\(url), country=\(country), imei=\(imei), interval=\(updateInterval)s")
     }
 
     @objc(stopGeo:)
@@ -94,7 +106,7 @@ class GeolocationProsegur: CDVPlugin {
         }
 
         guard let token = command.arguments[0] as? String,
-              let baseURL = command.arguments[1] as? String,
+              let url = command.arguments[1] as? String,
               let country = command.arguments[2] as? String,
               let imei = command.arguments[3] as? String,
               let centerId = command.arguments[4] as? String,
@@ -111,7 +123,7 @@ class GeolocationProsegur: CDVPlugin {
         // Configure with minimal settings for validation
         locationService?.configure(
             token: token,
-            baseURL: baseURL,
+            url: url,
             country: country,
             imei: imei,
             updateInterval: 300,
