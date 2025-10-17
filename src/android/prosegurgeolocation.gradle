@@ -9,6 +9,7 @@ repositories {
 android {
     compileSdkVersion 30
     buildToolsVersion '30.0.0'
+
     defaultConfig {
         minSdkVersion 26
         targetSdkVersion 30
@@ -23,11 +24,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "17"
-    }
-
-    kotlin {
-        jvmToolchain(17)
+        jvmTarget = "1.8"
     }
 
     ext.kotlin_version = '1.6.0'
@@ -41,11 +38,11 @@ configurations {
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.13.2'
-    implementation 'com.squareup.retrofit2:retrofit:3.0.0'
-	implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
-	implementation 'com.squareup.retrofit2:adapter-rxjava:3.0.0'
-    implementation 'com.google.android.gms:play-services-location:21.3.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.google.code.gson:gson:2.6.1'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'io.reactivex:rxjava:1.1.6'
+    implementation 'io.reactivex:rxandroid:1.2.1'
+    implementation 'com.squareup.retrofit2:adapter-rxjava:2.9.0'
+    implementation 'com.google.android.gms:play-services-location:21.2.0'
 }
-
-
