@@ -16,6 +16,7 @@
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="GeolocationProsegur">
                 <param name="android-package" value="cordova.plugin.prosegur.geolocation.GeolocationProsegur" />
+                <param name="onload" value="true" />
             </feature>
         </config-file>
 
@@ -53,7 +54,7 @@
 		<source-file src="src/android/GeoPosittion.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
 		<source-file src="src/android/GeoListenerService.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
 		<source-file src="src/android/RetrofitClient.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
-        <framework custom="true" src="src/android/prosegurgeolocation.gradle" target_dir="/*" type="gradleReference" />
+        <framework custom="true" src="src/android/prosegurgeolocation.gradle" type="gradleReference" />
     </platform>
 
     <platform name="ios">

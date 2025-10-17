@@ -53,7 +53,7 @@ class GeoListenerService : Service() {
     private var timerTask: TimerTask? = null
     private var timer: Timer? = null
     private val handlerT: Handler = Handler()
-    private var coords: ArrayList<GeoPosittion?> = ArrayList<GeoPosittion?>()
+    private var coords: ArrayList<GeoPosittion?> = arrayListOf()
     private var longitude = 0.0
     private var latitude = 0.0
     private var location: Location? = null
@@ -62,7 +62,6 @@ class GeoListenerService : Service() {
     private var locationRequest: LocationRequest? = null
     private val runnableGeo = Runnable { this.testGeo() }
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO) + SupervisorJob()
-
 
     override fun onCreate() {
         super.onCreate()
@@ -76,10 +75,10 @@ class GeoListenerService : Service() {
 
         try {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                startForeground(foregroundId, notification)
+                startForeground(FOREGROUND_ID, notification)
             } else {
                 startForeground(
-                    foregroundId,
+                    FOREGROUND_ID,
                     notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
                 )
@@ -87,7 +86,7 @@ class GeoListenerService : Service() {
         } catch (e: Exception) {
             Log.e(LOG_TAG, "⚠️ startForeground failed: " + e.message)
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
-            if (nm != null) nm.notify(foregroundId, notification)
+            if (nm != null) nm.notify(FOREGROUND_ID, notification)
         }
 
         serviceId = startId
@@ -253,7 +252,7 @@ class GeoListenerService : Service() {
                 val currentTime = Calendar.getInstance().getTime()
 
                 val geo = coords.stream()
-                    .filter { geop: GeoPosittion? -> currentTime == geop!!.dateTimeMobile }
+                    .filter { geop: GeoPosittion? -> currentTime == geop!!.getDateTimeMobile() }
                     .findFirst()
                     .orElse(null)
                 if (geo != null) {
@@ -288,7 +287,7 @@ class GeoListenerService : Service() {
                         if (response != null) {
                             coords.clear()
                             persistCoords()
-                            Log.i(LOG_TAG, "post OK received from API: ${response.message}")
+                            Log.i(LOG_TAG, "post OK received from API ")
                         } else {
                             Log.w(LOG_TAG, "⚠️ Empty response from API.")
                         }
@@ -296,7 +295,7 @@ class GeoListenerService : Service() {
                         Log.e(LOG_TAG, "post ERROR received from API: ${e.message()}")
                     } catch (e: Exception) {
                         Log.e(LOG_TAG, "Unable to submit post to API (kept in buffer): ${e.message}")
-                        persistCoords() // mantém os dados localmente
+                        persistCoords()
                     }
                 }
             } else {
@@ -324,7 +323,7 @@ class GeoListenerService : Service() {
         }
 
         if (mAPIService == null) {
-            mAPIService = getAPIService(dirListener)
+            mAPIService = getAPIService(dirListener ?: "")
             if (mAPIService == null) {
                 Log.e(LOG_TAG, "❌ API Service could not be initialized — skipping execution.")
                 return
@@ -367,7 +366,7 @@ class GeoListenerService : Service() {
 
     private fun persistCoords() {
         try {
-            val file = File(getFilesDir(), GEO_BUFFER_FILE)
+            val file = File(filesDir, GEO_BUFFER_FILE)
             val json = Gson().toJson(coords)
             val writer = FileWriter(file)
             writer.write(json)
@@ -383,8 +382,8 @@ class GeoListenerService : Service() {
             val file = File(filesDir, GEO_BUFFER_FILE)
             if (!file.exists()) return
             val json = String(Files.readAllBytes(file.toPath()))
-            val listType = object : TypeToken<ArrayList<GeoPosittion?>?>() {}.getType()
-            coords = Gson().fromJson<ArrayList<GeoPosittion?>>(json, listType)
+            val listType = object : TypeToken<ArrayList<GeoPosittion?>?>() {}.type
+            coords = Gson().fromJson(json, listType)
             Log.i(LOG_TAG, "📂 Loaded persisted coords: " + coords.size)
         } catch (e: Exception) {
             Log.e(LOG_TAG, "⚠️ Error loading persisted coords: " + e.message)
@@ -394,7 +393,7 @@ class GeoListenerService : Service() {
     companion object {
         val TAG: String = GeoListenerService::class.java.getSimpleName()
         val LOG_TAG: String = "$TAG - GEO_LISTENER - "
-        private const val foregroundId = 55544433
+        private const val FOREGROUND_ID = 55544433
         private const val GEO_BUFFER_FILE = "geo_buffer.json"
     }
 }
