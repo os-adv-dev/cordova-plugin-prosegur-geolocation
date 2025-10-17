@@ -19,6 +19,13 @@
             </feature>
         </config-file>
 
+        <config-file target="res/xml/config.xml" parent="/*">
+			<preference name="GradlePluginKotlinVersion" value="1.6.0" />
+			<preference name="GradlePluginKotlinEnabled" value="true" />
+            <preference name="GradlePluginKotlinCodeStyle" value="official" />
+            <preference name="AndroidXEnabled" value="true"/>
+        </config-file>
+
         <config-file parent="/*" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.INTERNET"/>
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -40,13 +47,12 @@
                 android:foregroundServiceType="location" />	    
         </config-file>
 		
-        <source-file src="src/android/GeolocationProsegur.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
-		<source-file src="src/android/APIService.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
-		<source-file src="src/android/ApiUtils.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
-		<source-file src="src/android/GeoPosittion.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
-		<source-file src="src/android/GeoListenerService.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
-		<source-file src="src/android/Post.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
-		<source-file src="src/android/RetrofitClient.java" target-dir="src/cordova/plugin/prosegur/geolocation" />
+        <source-file src="src/android/GeolocationProsegur.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/APIService.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/ApiUtils.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/GeoPosittion.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/GeoListenerService.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
+		<source-file src="src/android/RetrofitClient.kt" target-dir="app/src/main/kotlin/cordova/plugin/prosegur/geolocation" />
         <framework custom="true" src="src/android/prosegurgeolocation.gradle" target_dir="/*" type="gradleReference" />
     </platform>
 
