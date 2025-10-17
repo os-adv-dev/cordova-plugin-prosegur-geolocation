@@ -7,8 +7,8 @@ object RetrofitClient {
 
     private var retrofit: Retrofit? = null
 
-    fun getClient(baseUrl: String): Retrofit {
-        if (retrofit == null || retrofit?.baseUrl().toString() != baseUrl) {
+    fun getClient(baseUrl: String = "https://placeholder-base-url.com/"): Retrofit {
+        if (retrofit == null) {
             retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
