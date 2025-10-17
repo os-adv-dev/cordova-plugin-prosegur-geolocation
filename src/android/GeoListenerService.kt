@@ -323,7 +323,7 @@ class GeoListenerService : Service() {
         }
 
         if (mAPIService == null) {
-            mAPIService = getAPIService(dirListener ?: "")
+            mAPIService = getAPIService()
             if (mAPIService == null) {
                 Log.e(LOG_TAG, "❌ API Service could not be initialized — skipping execution.")
                 return
