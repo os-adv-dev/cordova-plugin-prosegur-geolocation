@@ -19,7 +19,7 @@ class LocationService: NSObject {
 
     // Configuration
     private var token: String?
-    private var baseURL: String?
+    private var url: String?
     private var country: String?
     private var imei: String?
     private var userId: String?
@@ -46,7 +46,7 @@ class LocationService: NSObject {
     // MARK: - Public Methods
     func configure(
         token: String,
-        baseURL: String,
+        url: String,
         country: String,
         imei: String,
         updateInterval: Int,
@@ -56,7 +56,7 @@ class LocationService: NSObject {
         geoLocationTypeId: Int
     ) {
         self.token = token
-        self.baseURL = baseURL
+        self.url = url
         self.country = country
         self.imei = imei
         self.userId = userId
@@ -65,10 +65,12 @@ class LocationService: NSObject {
         self.geoLocationTypeId = geoLocationTypeId
         self.updateInterval = TimeInterval(updateInterval)
 
-        self.apiClient = APIClient(baseURL: baseURL)
+        self.apiClient = APIClient(url: url)
     }
 
     func startTracking() {
+        NSLog("[LocationService] ===== START TRACKING CALLED =====")
+        NSLog("[LocationService] Current auth status: \(locationManager.authorizationStatus.rawValue)")
         requestLocationPermissions()
         startLocationUpdates()
         startTimer()
@@ -84,7 +86,7 @@ class LocationService: NSObject {
 
     func validateGeoLocation() -> Bool {
         guard token != nil,
-              baseURL != nil,
+              url != nil,
               country != nil,
               imei != nil,
               userId != nil,
@@ -105,23 +107,29 @@ class LocationService: NSObject {
     // MARK: - Private Methods
     private func requestLocationPermissions() {
         let status = locationManager.authorizationStatus
+        NSLog("[LocationService] requestLocationPermissions - status: \(status.rawValue)")
 
         switch status {
         case .notDetermined:
+            NSLog("[LocationService] Requesting always authorization...")
             locationManager.requestAlwaysAuthorization()
         case .restricted, .denied:
-            NSLog("[LocationService] Location permission denied or restricted")
+            NSLog("[LocationService] ⚠️ Location permission denied or restricted")
         case .authorizedWhenInUse:
+            NSLog("[LocationService] Has WhenInUse, requesting Always...")
             locationManager.requestAlwaysAuthorization()
         case .authorizedAlways:
-            NSLog("[LocationService] Location permission granted")
+            NSLog("[LocationService] ✅ Location permission granted (Always)")
         @unknown default:
+            NSLog("[LocationService] Unknown authorization status")
             break
         }
     }
 
     private func startLocationUpdates() {
+        NSLog("[LocationService] Calling startUpdatingLocation()")
         locationManager.startUpdatingLocation()
+        NSLog("[LocationService] startUpdatingLocation() called - waiting for location updates...")
     }
 
     private func stopLocationUpdates() {
@@ -228,7 +236,11 @@ class LocationService: NSObject {
 extension LocationService: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
+        NSLog("[LocationService] 📍 didUpdateLocations called with \(locations.count) locations")
+        guard let location = locations.last else {
+            NSLog("[LocationService] ⚠️ No location in array")
+            return
+        }
 
         // Store latest location (matching Android behavior - don't save to buffer yet)
         latestLocation = location

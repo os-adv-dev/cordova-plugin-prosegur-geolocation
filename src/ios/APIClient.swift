@@ -2,11 +2,11 @@ import Foundation
 
 class APIClient {
 
-    private let baseURL: String
+    private let url: String
     private let session: URLSession
 
-    init(baseURL: String) {
-        self.baseURL = baseURL
+    init(url: String) {
+        self.url = url
 
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
@@ -78,13 +78,8 @@ class APIClient {
     }
 
     private func buildGeoLocationURL(country: String, imei: String) -> URL? {
-        guard var components = URLComponents(string: baseURL) else { return nil }
-
-        if components.path.isEmpty {
-            components.path = "/GeoLocation_API/rest/DeviceGeoLocations/SetDeviceGeoLocations"
-        } else if !components.path.hasSuffix("/SetDeviceGeoLocations") {
-            components.path += "/GeoLocation_API/rest/DeviceGeoLocations/SetDeviceGeoLocations"
-        }
+        // URL now contains the full path, just append query parameters
+        guard var components = URLComponents(string: url) else { return nil }
 
         components.queryItems = [
             URLQueryItem(name: "country", value: country),
