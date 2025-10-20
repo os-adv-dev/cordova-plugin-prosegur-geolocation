@@ -9,7 +9,7 @@ class APIClient {
         self.url = url
 
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForRequest = 60
         config.timeoutIntervalForResource = 60
         self.session = URLSession(configuration: config)
     }
@@ -112,3 +112,4 @@ enum APIError: LocalizedError {
         }
     }
 }
+
