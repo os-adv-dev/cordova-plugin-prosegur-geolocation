@@ -85,6 +85,7 @@
         <config-file parent="UIBackgroundModes" target="*-Info.plist">
             <array>
                 <string>location</string>
+				<string>audio</string>
             </array>
         </config-file>
 
