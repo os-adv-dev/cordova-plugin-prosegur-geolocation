@@ -11,8 +11,10 @@ import android.location.Location
 import android.os.Binder
 import android.os.Build
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -52,7 +54,15 @@ class GeoListenerService : Service() {
     private var timeListener = 300
     private var timerTask: TimerTask? = null
     private var timer: Timer? = null
-    private val handlerT: Handler = Handler()
+
+    // Dedicated background thread for location updates (not throttled like MainLooper)
+    private var locationHandlerThread: HandlerThread? = null
+    private var locationHandler: Handler? = null
+    private val handlerT: Handler = Handler(Looper.getMainLooper())
+
+    // Maximum age for location data (30 seconds)
+    private val MAX_LOCATION_AGE_MS = 30000L
+
     private var coords: ArrayList<GeoPosittion?> = arrayListOf()
     private var longitude = 0.0
     private var latitude = 0.0
@@ -139,11 +149,22 @@ class GeoListenerService : Service() {
         if (timerTask != null) {
             timerTask!!.cancel()
         }
-        if (handlerT != null) {
-            handlerT.removeCallbacks(runnableGeo)
+        handlerT.removeCallbacks(runnableGeo)
+
+        // Remove location updates and stop dedicated thread
+        try {
+            fusedLocationClient?.removeLocationUpdates(locationCallback!!)
+        } catch (e: Exception) {
+            Log.w(LOG_TAG, "Error removing location updates: ${e.message}")
         }
+
+        // Stop the dedicated HandlerThread
+        locationHandlerThread?.quitSafely()
+        locationHandlerThread = null
+        locationHandler = null
+        Log.i(LOG_TAG, "✅ LocationHandlerThread stopped")
+
         persistCoords()
-        Thread.currentThread().interrupt()
 
         Log.i(LOG_TAG, "Finalizada la destruccion")
 
@@ -151,7 +172,7 @@ class GeoListenerService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        Log.i(LOG_TAG, "END")
+        Log.i(LOG_TAG, "END - Task removed")
 
         if (timer != null) {
             timer!!.cancel()
@@ -159,11 +180,21 @@ class GeoListenerService : Service() {
         if (timerTask != null) {
             timerTask!!.cancel()
         }
-        if (handlerT != null) {
-            handlerT.removeCallbacks(runnableGeo)
+        handlerT.removeCallbacks(runnableGeo)
+
+        // Remove location updates and stop dedicated thread
+        try {
+            fusedLocationClient?.removeLocationUpdates(locationCallback!!)
+        } catch (e: Exception) {
+            Log.w(LOG_TAG, "Error removing location updates: ${e.message}")
         }
+
+        // Stop the dedicated HandlerThread
+        locationHandlerThread?.quitSafely()
+        locationHandlerThread = null
+        locationHandler = null
+
         persistCoords()
-        Thread.currentThread().interrupt()
 
         stopSelf()
     }
@@ -195,6 +226,8 @@ class GeoListenerService : Service() {
         }
 
         fun stopService() {
+            Log.i(LOG_TAG, "stopService called")
+
             if (timer != null) {
                 timer!!.cancel()
             }
@@ -202,11 +235,25 @@ class GeoListenerService : Service() {
                 timerTask!!.cancel()
             }
             handlerT.removeCallbacks(runnableGeo)
+
+            // Remove location updates
+            try {
+                fusedLocationClient?.removeLocationUpdates(locationCallback!!)
+            } catch (e: Exception) {
+                Log.w(LOG_TAG, "Error removing location updates: ${e.message}")
+            }
+
+            // Stop the dedicated HandlerThread
+            locationHandlerThread?.quitSafely()
+            locationHandlerThread = null
+            locationHandler = null
+
             persistCoords()
 
             if (serviceId != -1) {
                 stopSelf(serviceId)
             }
+            Log.i(LOG_TAG, "✅ Service stopped")
         }
     }
 
@@ -214,13 +261,28 @@ class GeoListenerService : Service() {
     private fun initGPS() {
         val context = applicationContext
         Log.i(LOG_TAG + "IMEI_RECEIVE", "INICIANDO gps interval: " + timeListener)
-        locationRequest = LocationRequest.create()
-        locationRequest!!.interval = (timeListener * 1000).toLong()
-        locationRequest!!.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+        // Create dedicated HandlerThread for location updates (not throttled in background)
+        locationHandlerThread = HandlerThread("LocationHandlerThread").apply {
+            start()
+        }
+        locationHandler = Handler(locationHandlerThread!!.looper)
+        Log.i(LOG_TAG, "✅ Dedicated LocationHandlerThread started")
+
+        // Configure LocationRequest with fastestInterval for more frequent updates
+        locationRequest = LocationRequest.create().apply {
+            interval = (timeListener * 1000).toLong()
+            fastestInterval = 5000L  // Accept updates as fast as every 5 seconds
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            smallestDisplacement = 0f  // Get updates even without movement
+        }
+        Log.i(LOG_TAG, "✅ LocationRequest configured: interval=${timeListener}s, fastestInterval=5s, priority=HIGH_ACCURACY")
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         fusedLocationClient!!.lastLocation
             .addOnSuccessListener(OnSuccessListener { location: Location? ->
                 if (location != null) {
+                    this.location = location
                     latitude = location.latitude
                     longitude = location.longitude
                     Log.i(LOG_TAG + "GEO_LAT init gps", latitude.toString())
@@ -230,17 +292,21 @@ class GeoListenerService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 location = result.lastLocation
-                latitude = location!!.latitude
-                longitude = location!!.longitude
-                Log.i(LOG_TAG + "GEO_LAT0", latitude.toString())
+                if (location != null) {
+                    latitude = location!!.latitude
+                    longitude = location!!.longitude
+                    Log.i(LOG_TAG + "GEO_LAT_UPDATE", "lat=$latitude, lng=$longitude, accuracy=${location!!.accuracy}m")
+                }
             }
         }
 
+        // Use dedicated Looper instead of MainLooper (not throttled in background)
         fusedLocationClient!!.requestLocationUpdates(
             locationRequest!!,
             locationCallback!!,
-            Looper.getMainLooper()
+            locationHandlerThread!!.looper
         )
+        Log.i(LOG_TAG, "✅ Location updates registered on dedicated thread")
     }
 
     @SuppressLint("MissingPermission")
@@ -303,13 +369,26 @@ class GeoListenerService : Service() {
                 fusedLocationClient!!.requestLocationUpdates(
                     locationRequest!!,
                     locationCallback!!,
-                    Looper.getMainLooper()
+                    locationHandlerThread?.looper ?: Looper.getMainLooper()
                 )
             }
         } catch (ex: Exception) {
             Log.e(LOG_TAG, "Exception saveGeoLocation: " + ex.message)
         } finally {
             Log.i(LOG_TAG, "saveGeoLocation finish")
+        }
+    }
+
+    /**
+     * Get location age in milliseconds
+     */
+    private fun getLocationAgeMs(loc: Location?): Long {
+        if (loc == null) return Long.MAX_VALUE
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            SystemClock.elapsedRealtime() - (loc.elapsedRealtimeNanos / 1_000_000)
+        } else {
+            System.currentTimeMillis() - loc.time
         }
     }
 
@@ -330,12 +409,13 @@ class GeoListenerService : Service() {
             }
         }
 
-        fusedLocationClient!!.requestLocationUpdates(
-            locationRequest!!,
-            locationCallback!!,
-            Looper.getMainLooper()
-        )
         Log.i(LOG_TAG + "IMEI_RECEIVE geo", imeiListener!!)
+
+        // Log location age for debugging
+        val ageMs = getLocationAgeMs(location)
+        Log.i(LOG_TAG, "Location age: ${ageMs}ms, accuracy: ${location?.accuracy ?: "N/A"}m")
+
+        // Save current location (dedicated thread keeps it fresh in background)
         saveGeoLocation(location)
         Log.i(LOG_TAG, "GeoTimer finish")
     }
