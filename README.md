@@ -1,28 +1,28 @@
 # Cordova Plugin Prosegur Geolocation
 
-Plugin Cordova para tracking contínuo de geolocalização em aplicações OutSystems Native Mobile, com suporte a foreground, background e screen-off.
+Cordova plugin for continuous geolocation tracking in OutSystems Native Mobile applications, with support for foreground, background, and screen-off scenarios.
 
-## Funcionalidades
+## Features
 
-- **Tracking contínuo**: Captura localização em foreground, background e com tela desligada
-- **Foreground Service**: Serviço Android com notificação persistente para operação em background
-- **Envio automático para API**: Envia coordenadas para servidor em intervalos configuráveis
-- **Cache offline**: Armazena dados localmente quando offline, sincroniza quando online
-- **Android 14+ otimizado**: HandlerThread dedicada para precisão em background
-- **iOS suporte**: Implementação completa com CLLocationManager
+- **Continuous tracking**: Captures location in foreground, background, and with screen off
+- **Foreground Service**: Android service with persistent notification for background operation
+- **Automatic API submission**: Sends coordinates to server at configurable intervals
+- **Offline caching**: Stores data locally when offline, syncs when online
+- **Android 14+ optimized**: Dedicated HandlerThread for background precision
+- **iOS support**: Full implementation with CLLocationManager
 
-## Plataformas Suportadas
+## Supported Platforms
 
-- Android (SDK 24+, otimizado para Android 14+)
+- Android (SDK 24+, optimized for Android 14+)
 - iOS
 
-## Instalação
+## Installation
 
 ```bash
 cordova plugin add cordova-plugin-prosegur-geolocation
 ```
 
-Ou via URL do repositório:
+Or via repository URL:
 
 ```bash
 cordova plugin add https://github.com/os-adv-dev/cordova-plugin-prosegur-geolocation.git
@@ -32,19 +32,19 @@ cordova plugin add https://github.com/os-adv-dev/cordova-plugin-prosegur-geoloca
 
 ### initGeo
 
-Inicia o tracking de geolocalização.
+Starts geolocation tracking.
 
 ```javascript
 cordova.plugins.GeolocationProsegur.initGeo(
-    token,           // String: Token de autenticação para API
-    dir,             // String: URL do endpoint da API
-    country,         // String: Código do país
-    imei,            // String: Identificador do dispositivo
-    time,            // Int: Intervalo em segundos entre envios
-    center,          // String: Centro/unidade
-    user,            // String: Identificador do usuário
-    provenance,      // Int: Código de proveniência
-    geoLocationTypeId, // Int: Tipo de geolocalização
+    token,             // String: Authentication token for API
+    dir,               // String: API endpoint URL
+    country,           // String: Country code
+    imei,              // String: Device identifier
+    time,              // Int: Interval in seconds between submissions
+    center,            // String: Center/unit
+    user,              // String: User identifier
+    provenance,        // Int: Provenance code
+    geoLocationTypeId, // Int: Geolocation type
     successCallback,
     errorCallback
 );
@@ -52,7 +52,7 @@ cordova.plugins.GeolocationProsegur.initGeo(
 
 ### stopGeo
 
-Para o tracking de geolocalização.
+Stops geolocation tracking.
 
 ```javascript
 cordova.plugins.GeolocationProsegur.stopGeo(
@@ -63,7 +63,7 @@ cordova.plugins.GeolocationProsegur.stopGeo(
 
 ### validateGeo
 
-Valida o status atual do tracking.
+Validates the current tracking status.
 
 ```javascript
 cordova.plugins.GeolocationProsegur.validateGeo(
@@ -79,11 +79,11 @@ cordova.plugins.GeolocationProsegur.validateGeo(
 );
 ```
 
-## Permissões
+## Permissions
 
 ### Android
 
-O plugin solicita automaticamente as seguintes permissões:
+The plugin automatically requests the following permissions:
 
 ```xml
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -96,27 +96,27 @@ O plugin solicita automaticamente as seguintes permissões:
 
 ### iOS
 
-Configurado automaticamente no Info.plist:
+Automatically configured in Info.plist:
 
 - `NSLocationAlwaysAndWhenInUseUsageDescription`
 - `NSLocationWhenInUseUsageDescription`
 - `NSLocationAlwaysUsageDescription`
 - `UIBackgroundModes`: location
 
-## Configuração Recomendada
+## Recommended Configuration
 
-Para melhor precisão em background, recomenda-se:
+For best background precision, it is recommended to:
 
-1. **Excluir o app da otimização de bateria** (Android)
-2. **Manter permissões de localização "Sempre"** ativas
-3. **Intervalo mínimo recomendado**: 30 segundos
+1. **Exclude the app from battery optimization** (Android)
+2. **Keep location permissions set to "Always"**
+3. **Minimum recommended interval**: 30 seconds
 
-## Arquitetura (Android)
+## Architecture (Android)
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │                  GeolocationProsegur                │
-│              (Plugin Principal - Kotlin)            │
+│              (Main Plugin - Kotlin)                 │
 └─────────────────────┬───────────────────────────────┘
                       │
                       ▼
@@ -125,9 +125,9 @@ Para melhor precisão em background, recomenda-se:
 │            (Foreground Service - Kotlin)            │
 │                                                     │
 │  ┌─────────────────────────────────────────────┐   │
-│  │         HandlerThread (dedicada)            │   │
-│  │   - Não throttled em background             │   │
-│  │   - Recebe callbacks de localização         │   │
+│  │         HandlerThread (dedicated)           │   │
+│  │   - Not throttled in background             │   │
+│  │   - Receives location callbacks             │   │
 │  └─────────────────────────────────────────────┘   │
 │                                                     │
 │  ┌─────────────────────────────────────────────┐   │
@@ -139,8 +139,8 @@ Para melhor precisão em background, recomenda-se:
 │                                                     │
 │  ┌─────────────────────────────────────────────┐   │
 │  │              Timer + Coroutines             │   │
-│  │   - Dispara envio para API                  │   │
-│  │   - Persiste dados offline                  │   │
+│  │   - Triggers API submission                 │   │
+│  │   - Persists offline data                   │   │
 │  └─────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────┘
 ```
@@ -166,37 +166,37 @@ Para melhor precisão em background, recomenda-se:
 - Offline caching support
 - API integration with Retrofit
 
-## Estrutura do Projeto
+## Project Structure
 
 ```
 cordova-plugin-prosegur-geolocation/
-├── plugin.xml                    # Configuração do plugin
-├── package.json                  # Metadados NPM
+├── plugin.xml                    # Plugin configuration
+├── package.json                  # NPM metadata
 ├── www/
-│   └── GeolocationProsegur.js   # Interface JavaScript
+│   └── GeolocationProsegur.js   # JavaScript interface
 ├── src/
 │   ├── android/
-│   │   ├── GeolocationProsegur.kt    # Plugin principal
+│   │   ├── GeolocationProsegur.kt    # Main plugin
 │   │   ├── GeoListenerService.kt     # Foreground Service
-│   │   ├── GeoPosittion.kt           # Model de dados
-│   │   ├── APIService.kt             # Interface Retrofit
-│   │   ├── ApiUtils.kt               # Utilitários API
-│   │   ├── RetrofitClient.kt         # Cliente HTTP
+│   │   ├── GeoPosittion.kt           # Data model
+│   │   ├── APIService.kt             # Retrofit interface
+│   │   ├── ApiUtils.kt               # API utilities
+│   │   ├── RetrofitClient.kt         # HTTP client
 │   │   └── prosegurgeolocation.gradle
 │   └── ios/
-│       ├── GeolocationProsegur.swift # Plugin principal
-│       ├── LocationService.swift     # Serviço de localização
-│       ├── GeoPosition.swift         # Model de dados
-│       └── APIClient.swift           # Cliente HTTP
+│       ├── GeolocationProsegur.swift # Main plugin
+│       ├── LocationService.swift     # Location service
+│       ├── GeoPosition.swift         # Data model
+│       └── APIClient.swift           # HTTP client
 └── hooks/
     ├── install_prerequisites.js
     └── add_swift_support.js
 ```
 
-## Suporte
+## Support
 
-Para reportar issues ou solicitar features, abra uma issue no repositório GitHub.
+To report issues or request features, open an issue on the GitHub repository.
 
-## Licença
+## License
 
 Proprietary - Prosegur / OutSystems
