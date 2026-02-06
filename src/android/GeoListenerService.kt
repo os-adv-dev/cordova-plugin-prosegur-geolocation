@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.ActivityManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.location.Location
@@ -16,11 +18,15 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.Granularity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -62,6 +68,12 @@ class GeoListenerService : Service() {
 
     // Maximum age for location data (30 seconds)
     private val MAX_LOCATION_AGE_MS = 30000L
+
+    // Maximum acceptable accuracy in meters (reject locations with worse accuracy)
+    private val MAX_ACCURACY_METERS = 100f
+
+    // CancellationTokenSource for getCurrentLocation requests
+    private var cancellationTokenSource: CancellationTokenSource? = null
 
     private var coords: ArrayList<GeoPosittion?> = arrayListOf()
     private var longitude = 0.0
@@ -151,6 +163,10 @@ class GeoListenerService : Service() {
         }
         handlerT.removeCallbacks(runnableGeo)
 
+        // Cancel any pending getCurrentLocation request
+        cancellationTokenSource?.cancel()
+        cancellationTokenSource = null
+
         // Remove location updates and stop dedicated thread
         try {
             fusedLocationClient?.removeLocationUpdates(locationCallback!!)
@@ -181,6 +197,10 @@ class GeoListenerService : Service() {
             timerTask!!.cancel()
         }
         handlerT.removeCallbacks(runnableGeo)
+
+        // Cancel any pending getCurrentLocation request
+        cancellationTokenSource?.cancel()
+        cancellationTokenSource = null
 
         // Remove location updates and stop dedicated thread
         try {
@@ -235,6 +255,10 @@ class GeoListenerService : Service() {
                 timerTask!!.cancel()
             }
             handlerT.removeCallbacks(runnableGeo)
+
+            // Cancel any pending getCurrentLocation request
+            cancellationTokenSource?.cancel()
+            cancellationTokenSource = null
 
             // Remove location updates
             try {
@@ -338,7 +362,8 @@ class GeoListenerService : Service() {
                     )
                 )
                 persistCoords()
-                Log.i(LOG_TAG, "NEW geoposition added, coords: " + coords.size)
+                val appState = if (isAppInForeground()) "FOREGROUND" else "BACKGROUND"
+                Log.i(LOG_TAG, "📍 NEW geoposition [$appState] - lat=$latitude, lng=$longitude, accuracy=${location.accuracy}m, total=${coords.size}")
 
                 scope.launch(Dispatchers.IO) {
                     try {
@@ -380,6 +405,22 @@ class GeoListenerService : Service() {
     }
 
     /**
+     * Check if the app is in foreground or background
+     */
+    private fun isAppInForeground(): Boolean {
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val appProcesses = activityManager.runningAppProcesses ?: return false
+        val packageName = packageName
+        for (appProcess in appProcesses) {
+            if (appProcess.processName == packageName &&
+                appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
      * Get location age in milliseconds
      */
     private fun getLocationAgeMs(loc: Location?): Long {
@@ -411,13 +452,81 @@ class GeoListenerService : Service() {
 
         Log.i(LOG_TAG + "IMEI_RECEIVE geo", imeiListener!!)
 
-        // Log location age for debugging
+        // Check if current cached location is good enough
         val ageMs = getLocationAgeMs(location)
-        Log.i(LOG_TAG, "Location age: ${ageMs}ms, accuracy: ${location?.accuracy ?: "N/A"}m")
+        val accuracy = location?.accuracy ?: Float.MAX_VALUE
+        Log.i(LOG_TAG, "Cached location - age: ${ageMs}ms, accuracy: ${accuracy}m")
 
-        // Save current location (dedicated thread keeps it fresh in background)
-        saveGeoLocation(location)
+        if (location != null && ageMs < MAX_LOCATION_AGE_MS && accuracy <= MAX_ACCURACY_METERS) {
+            // Cached location is fresh and accurate - use it
+            Log.i(LOG_TAG, "✅ Using cached location (accurate)")
+            saveGeoLocation(location)
+        } else {
+            // Cached location is stale or inaccurate - force fresh GPS reading
+            Log.w(LOG_TAG, "⚠️ Cached location not good enough, forcing fresh GPS reading...")
+            requestFreshHighAccuracyLocation()
+        }
         Log.i(LOG_TAG, "GeoTimer finish")
+    }
+
+    /**
+     * Force a fresh high-accuracy GPS location reading.
+     * Uses getCurrentLocation() which actively turns on GPS hardware even in background.
+     */
+    @SuppressLint("MissingPermission")
+    private fun requestFreshHighAccuracyLocation() {
+        // Cancel any previous request
+        cancellationTokenSource?.cancel()
+        cancellationTokenSource = CancellationTokenSource()
+
+        val currentLocationRequest = CurrentLocationRequest.Builder()
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .setGranularity(Granularity.GRANULARITY_FINE)
+            .setMaxUpdateAgeMillis(0) // Force fresh location, no cache
+            .setDurationMillis(15000) // Wait up to 15 seconds for GPS fix
+            .build()
+
+        Log.i(LOG_TAG, "📡 Requesting fresh GPS location (getCurrentLocation)...")
+
+        fusedLocationClient?.getCurrentLocation(
+            currentLocationRequest,
+            cancellationTokenSource!!.token
+        )?.addOnSuccessListener { freshLocation: Location? ->
+            if (freshLocation != null) {
+                val freshAccuracy = freshLocation.accuracy
+                Log.i(LOG_TAG, "📍 Fresh location received: accuracy=${freshAccuracy}m")
+
+                if (freshAccuracy <= MAX_ACCURACY_METERS) {
+                    // Good accuracy - save it
+                    location = freshLocation
+                    latitude = freshLocation.latitude
+                    longitude = freshLocation.longitude
+                    Log.i(LOG_TAG, "✅ Fresh location is accurate, saving...")
+                    saveGeoLocation(freshLocation)
+                } else {
+                    // Still not accurate enough, but save with warning
+                    Log.w(LOG_TAG, "⚠️ Fresh location still not ideal (${freshAccuracy}m > ${MAX_ACCURACY_METERS}m), saving anyway...")
+                    location = freshLocation
+                    latitude = freshLocation.latitude
+                    longitude = freshLocation.longitude
+                    saveGeoLocation(freshLocation)
+                }
+            } else {
+                Log.e(LOG_TAG, "❌ getCurrentLocation returned null")
+                // Fallback: save whatever we have (better than nothing)
+                if (location != null) {
+                    Log.w(LOG_TAG, "⚠️ Using cached location as fallback")
+                    saveGeoLocation(location)
+                }
+            }
+        }?.addOnFailureListener { e ->
+            Log.e(LOG_TAG, "❌ getCurrentLocation failed: ${e.message}")
+            // Fallback: save cached location
+            if (location != null) {
+                Log.w(LOG_TAG, "⚠️ Using cached location as fallback after failure")
+                saveGeoLocation(location)
+            }
+        }
     }
 
     interface GeoListenerServiceCallback {
