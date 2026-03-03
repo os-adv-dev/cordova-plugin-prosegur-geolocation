@@ -6,8 +6,8 @@ exports.stop = function (success, error) {
     exec(success, error, 'GeolocationProsegur', 'stop');
 };
 
-exports.initGeo = function (token, dir, country, imei, time, center, user, provenance, geoLocationTypeId, success, error) {
-    exec(success, error, 'GeolocationProsegur', 'initGeo', [token, dir, country, imei, time, center, user, provenance, geoLocationTypeId]);
+exports.initGeo = function (token, dir, country, imei, time, center, user, provenance, geoLocationTypeId, minAccuracy, success, error) {
+    exec(success, error, 'GeolocationProsegur', 'initGeo', [token, dir, country, imei, time, center, user, provenance, geoLocationTypeId, minAccuracy]);
 };
 
 exports.validateGeo = function (token, dir, country, imei, center, user, provenance, success, error) {

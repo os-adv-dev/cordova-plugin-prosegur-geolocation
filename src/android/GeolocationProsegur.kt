@@ -40,6 +40,8 @@ class GeolocationProsegur : CordovaPlugin() {
                 val user = args.getString(6)
                 val provenance = args.getInt(7)
                 val geoLocationType = args.getInt(8)
+                val minAccuracy = args.getDouble(9)
+
                 initGeoListener(
                     callbackContext,
                     token,
@@ -50,7 +52,8 @@ class GeolocationProsegur : CordovaPlugin() {
                     center,
                     user,
                     provenance,
-                    geoLocationType
+                    geoLocationType,
+                    minAccuracy
                 )
                 return true
             } else if (STOP_SERVICE_GEO == action) {
@@ -77,7 +80,8 @@ class GeolocationProsegur : CordovaPlugin() {
         center: String?,
         user: String?,
         provenance: Int,
-        geoLocationType: Int
+        geoLocationType: Int,
+        minAccuracy: Double
     ) {
         val context = this.cordova.getActivity().applicationContext
         val serviceIntent = Intent(context, GeoListenerService::class.java)
@@ -130,7 +134,8 @@ class GeolocationProsegur : CordovaPlugin() {
                             center,
                             user,
                             provenance,
-                            geoLocationType
+                            geoLocationType,
+                            minAccuracy
                         )
                         context.unbindService(this)
                         sendSuccessResult(callbackContext)

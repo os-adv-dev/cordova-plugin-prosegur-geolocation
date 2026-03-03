@@ -60,6 +60,7 @@ class GeoListenerService : Service() {
     private var timeListener = 300
     private var timerTask: TimerTask? = null
     private var timer: Timer? = null
+    private var minAccuracyListener: Double = 0.0
 
     // Dedicated background thread for location updates (not throttled like MainLooper)
     private var locationHandlerThread: HandlerThread? = null
@@ -230,7 +231,8 @@ class GeoListenerService : Service() {
             center: String?,
             user: String?,
             provenance: Int,
-            geoLocationType: Int
+            geoLocationType: Int,
+            minAccuracy: Double
         ) {
             callback = geoListenerServiceCallback
             tokenListener = token
@@ -242,6 +244,7 @@ class GeoListenerService : Service() {
             userListener = user
             provenanceListener = provenance
             geoLocationTypeListener = geoLocationType
+            minAccuracyListener = minAccuracy
             startTimer()
         }
 
@@ -337,6 +340,13 @@ class GeoListenerService : Service() {
     private fun saveGeoLocation(location: Location?) {
         try {
             if (location != null) {
+
+                // Filter de accuracy min
+                if (minAccuracyListener > 0 && location.accuracy > minAccuracyListener) {
+                    Log.w(LOG_TAG, "-- ❌ Location discarded: accuracy=${location.accuracy}m exceeds minAccuracy=${minAccuracyListener}m")
+                    return
+                }
+                
                 longitude = location.longitude
                 latitude = location.latitude
                 val currentTime = Calendar.getInstance().getTime()

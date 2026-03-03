@@ -27,6 +27,7 @@ class LocationService: NSObject {
     private var provenanceId: Int?
     private var geoLocationTypeId: Int?
     private var updateInterval: TimeInterval = 300 // Default 300 seconds
+    private var minAccuracy: Double = 0.0
 
     weak var delegate: LocationServiceDelegate?
 
@@ -53,7 +54,8 @@ class LocationService: NSObject {
         centerId: String,
         userId: String,
         provenanceId: Int,
-        geoLocationTypeId: Int
+        geoLocationTypeId: Int,
+        minAccuracy: Double
     ) {
         self.token = token
         self.url = url
@@ -63,6 +65,7 @@ class LocationService: NSObject {
         self.centerId = centerId
         self.provenanceId = provenanceId
         self.geoLocationTypeId = geoLocationTypeId
+        self.minAccuracy = minAccuracy
         self.updateInterval = TimeInterval(updateInterval)
 
         self.apiClient = APIClient(url: url)
@@ -157,6 +160,12 @@ class LocationService: NSObject {
     }
 
     private func saveGeoLocation(_ location: CLLocation) {
+        // Filter accuracy
+        if minAccuracy > 0 && location.horizontalAccuracy > minAccuracy {
+            NSLog("[LocationService] ❌ Location discarded: accuracy=\(location.horizontalAccuracy)m exceeds minAccuracy=\(minAccuracy)m")
+            return
+        }
+
         guard let userId = userId,
               let centerId = centerId,
               let provenanceId = provenanceId,

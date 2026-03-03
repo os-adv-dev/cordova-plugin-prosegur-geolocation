@@ -20,11 +20,11 @@ class GeolocationProsegur: CDVPlugin {
         NSLog("[GeolocationProsegur] Arguments count: \(command.arguments.count)")
         NSLog("[GeolocationProsegur] locationService is nil? \(locationService == nil)")
 
-        guard command.arguments.count >= 9 else {
-            NSLog("[GeolocationProsegur] ❌ FAILED: Not enough arguments (need 9, got \(command.arguments.count))")
+        guard command.arguments.count >= 10 else {
+            NSLog("[GeolocationProsegur] ❌ FAILED: Not enough arguments (need 10, got \(command.arguments.count))")
             let result = CDVPluginResult(
                 status: CDVCommandStatus_ERROR,
-                messageAs: "Missing required parameters - need 9, got \(command.arguments.count)"
+                messageAs: "Missing required parameters - need 10, got \(command.arguments.count)"
             )
             self.commandDelegate?.send(result, callbackId: command.callbackId)
             return
@@ -40,7 +40,8 @@ class GeolocationProsegur: CDVPlugin {
               let centerId = command.arguments[5] as? String,
               let userId = command.arguments[6] as? String,
               let provenanceId = command.arguments[7] as? Int,
-              let geoLocationTypeId = command.arguments[8] as? Int else {
+              let geoLocationTypeId = command.arguments[8] as? Int,
+              let minAccuracy = command.arguments[9] as? Double else {
             NSLog("[GeolocationProsegur] ❌ FAILED: Parameter type casting failed")
             NSLog("[GeolocationProsegur] Args: \(command.arguments)")
             let result = CDVPluginResult(
@@ -63,7 +64,8 @@ class GeolocationProsegur: CDVPlugin {
             centerId: centerId,
             userId: userId,
             provenanceId: provenanceId,
-            geoLocationTypeId: geoLocationTypeId
+            geoLocationTypeId: geoLocationTypeId,
+            minAccuracy: minAccuracy
         )
 
         NSLog("[GeolocationProsegur] ✅ Configuration complete, starting tracking...")
@@ -130,7 +132,8 @@ class GeolocationProsegur: CDVPlugin {
             centerId: centerId,
             userId: userId,
             provenanceId: provenanceId,
-            geoLocationTypeId: 1
+            geoLocationTypeId: 1,
+            minAccuracy: 0.0
         )
 
         let isValid = locationService?.validateGeoLocation() ?? false
